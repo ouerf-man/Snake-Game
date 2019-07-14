@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>jeu</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+  <style type="text/css">
+    #bg{
+      filter: blur(5px);
+      -webkit-filter: blur(5px);
+      margin-bottom:-5px; 
+      width: 600px;
+      height: 400px;
+      /*z-index: 10;*/
+      position: relative;
+    }
+
+    .game{
+      width: 600px;
+      height: 400px;
+      border: 2px black solid;
+      overflow: hidden;
+      position: relative;
+      margin-top: -8px;
+      margin-left: -8px;
+    }
+
+    .food{
+      position: absolute;
+      background-color: red;
+      width: 9px;
+      height: 9px;
+      top:5px;
+      border: 1px solid red;
+      border-radius: 1px;
+    }
+
+    .snake{
+      position : absolute;
+      background-color: white;
+      width: 12px;
+      height: 12px;
+      border:1px solid black;
+      border-radius:1px;
+      top:200px;
+    }
+    
+  </style>
+</head>
+
+<body>
+
+<div class="game">
+  <img id="bg" src="bg.jpg" alt="bg">
+</div>
+
+<div class="food"></div>
+<div class="snake"></div>
+<div class="snake body"></div>
+<div class="snake body"></div>
+
+<div class="score display-2">Score : <span id="scr">0</span></div>
+  
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+
+
+  <script>
+    var head = $('.snake:first');
+    var score = $("#scr");
+    var scoreInt = 0;
+    /*
+    ** 1) setupSnake : make a 3 blocks sized snake which initially move right and place the food randomly
+    ** 2) moveDirection functions : logic of moving
+    ** 3) move function : listen to keydown events and call moveDirection functions for every event
+    ** 4) wallCol function : listen to a wall touch event 
+    ** 5) gameLogic function (when snake eats food)
+    ** 6) death
+    */
+//****** 1)
+    function randomFood(){
+      let fX = Math.floor(Math.random()*570)+10;
+      let fY = Math.floor(Math.random()*365)+10;
+      $('.food').css('top',fY);
+      $('.food').css('left',fX);
+    }
+
+    function setupSnake(){
+      $('.snake').each(function(index){
+        $(this).css('left',36-index*12);
+      });
+      randomFood();
+     }
+
+//****** 2) 
+    function moveRight(){
+      head.clearQueue().stop();
+      head.animate({left:'+=10'},100,'linear',function(){
+        death();
+        snake = $('.snake');
+        let newPos=head.offset();
+        let pos;
+        snake.each(function(index){
+          pos=newPos;
+          newPos=$(this).offset();
+          $(this).offset(pos);
+        });
+        moveRight();
+      });
+      
+    }
+
+        function moveLeft(){
+      head.clearQueue().stop();
+      head.animate({left:'-=10'},100,'linear',function(){
+        death();
+        snake = $('.snake');
+        let newPos=head.offset();
+        let pos;
+        snake.each(function(index){
+          pos=newPos;
+          newPos=$(this).offset();
+          $(this).offset(pos);
+        });
+        moveLeft();
+      });
+      
+    }
+
+        function moveUp(){
+      head.clearQueue().stop();
+      head.animate({top:'-=10'},100,'linear',function(){
+        death();
+        snake = $('.snake');
+        let newPos=head.offset();
+        let pos;
+        snake.each(function(index){
+          pos=newPos;
+          newPos=$(this).offset();
+          $(this).offset(pos);
+        });
+        moveUp();
+      });
+      
+    }
+
+        function moveDown(){
+      head.clearQueue().stop();
+      head.animate({top:'+=10'},100,'linear',function(){
+        death();
+        snake = $('.snake');
+        let newPos=head.offset();
+        let pos;
+        snake.each(function(index){
+          pos=newPos;
+          newPos=$(this).offset();
+          $(this).offset(pos);
+        });
+        moveDown();
+      });
+      
+    }
+//****** 3) 
+    function move(){
+      moveRight();
+      $(document).keydown(function(e){
+        switch(e.which){
+          case 38 : moveUp();break;
+          case 40 : moveDown();break;
+          case 37 : moveLeft();break;
+          case 39 : moveRight();break;
+        }
+      });
+    }
+//****** 4) 
+     function wallCol(){
+
+      if(parseInt(head.css('left'))>=580){
+        head.stop(true,false);
+        head.css('left',5);
+        moveRight();
+      }  
+      if(parseInt(head.css('left'))<=2){
+        head.stop(true,false);
+        head.css('left',580);
+        moveLeft();
+      }
+      if(parseInt(head.css('top'))>=380){
+        head.stop(true,false);
+        head.css('top',3);
+        moveDown();
+      }
+      if(parseInt(head.css('top'))<=2){
+        head.stop(true,false);
+        head.css('top',380);
+        moveUp();
+      }      
+
+
+     }
+
+
+
+//****** 5)
+
+    function gameLogic(){
+
+      let hX = head.position().left;
+      let hY = head.position().top;
+      let fX = $('.food').position().left;
+      let fY = $('.food').position().top;
+
+      console.log(Math.floor(hY),Math.floor(hX),fY,fX);
+      console.log(Math.floor(hX)==fX && fY==Math.floor(hY));
+
+      if(
+          ((Math.floor(hX)>(fX-4)) && (Math.floor(hX)<(fX+4)) && (Math.floor(hY)>(fY-4)) && (Math.floor(hY)<(fY+4)))
+        ){
+        randomFood(); 
+        $(".snake:last").after("<div class='snake body'></div>");
+        score.text(++scoreInt);
+      }
+
+      setTimeout(gameLogic,50);
+    }
+
+//******** 6)
+
+function death(){
+
+  let hX = head.position().left;
+  let hY = head.position().top;
+  $(".body").each(function(index){
+      let fX = Math.floor($(this).position().left);
+      let fY = Math.floor($(this).position().top);
+      if(
+          ((Math.floor(hX)>(fX-4)) && (Math.floor(hX)<(fX+4)) && (Math.floor(hY)>(fY-4)) && (Math.floor(hY)<(fY+4)))
+        ){
+          alert("u lost");
+          location.reload();
+
+      }
+
+  });
+}
+
+// CALL FUNCTIONS
+
+  $(document).ready(function(){
+    setupSnake();
+    move();
+    setInterval(wallCol,50);
+    gameLogic();
+  });
+
+
+  </script>
+</body>
+</html>
+
+
